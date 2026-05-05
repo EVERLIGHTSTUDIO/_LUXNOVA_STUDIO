@@ -1,1 +1,0 @@
-# _LUXNOVA_STUDIO
