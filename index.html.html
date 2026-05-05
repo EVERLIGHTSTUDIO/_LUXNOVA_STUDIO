@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>_EVERLIGHT_STUDIO</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garant:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Rajdhani:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+
+  <!-- Phosphor Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web@2.1.1/src/index.js"></script>
+
+  <style>
+    /* ============================================================
+       VARIABLES & RESET
+    ============================================================ */
+    :root {
+      --black:       #050508;
+      --deep:        #0a0a10;
+      --surface:     #0f0f18;
+      --card:        #13131e;
+      --border:      #1e1e30;
+      --cyan:        #00e5ff;
+      --cyan-dim:    #00e5ff40;
+      --gold:        #ffd166;
+      --gold-dim:    #ffd16630;
+      --white:       #f0f0f8;
+      --muted:       #6b6b8a;
+      --font-display: 'Cormorant Garant', Georgia, serif;
+      --font-body:    'Rajdhani', sans-serif;
+      --font-mono:    'Space Mono', monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: var(--font-body);
+      font-size: 17px;
+      line-height: 1.7;
+      overflow-x: hidden;
+      cursor: none; /* Custom cursor active */
+    }
+
+    a { text-decoration: none; color: inherit; }
+    img { display: block; width: 100%; }
+    ul { list-style: none; }
+
+    /* ============================================================
+       CUSTOM CURSOR
+    ============================================================ */
+    #cursor-dot, #cursor-ring {
+      position: fixed;
+      top: 0; left: 0;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: opacity 0.3s;
+    }
+    #cursor-dot {
+      width: 7px; height: 7px;
+      background: var(--cyan);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--cyan);
+    }
+    #cursor-ring {
+      width: 36px; height: 36px;
+      border: 1.5px solid var(--cyan-dim);
+      border-radius: 50%;
+      transition: width 0.2s, height 0.2s, border-color 0.2s;
+    }
+    body:hover #cursor-dot { opacity: 1; }
+    .cursor-hover #cursor-ring {
+      width: 56px; height: 56px;
+      border-color: var(--cyan);
+    }
+
+    /* ============================================================
+       NOISE OVERLAY
+    ============================================================ */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.025;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* ============================================================
+       SCROLL ANIMATION BASE
+    ============================================================ */
+    .reveal {
+      opacity: 0;
+      transform: translateY(38px);
+      transition: opacity 0.75s ease, transform 0.75s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal-left {
+      opacity: 0;
+      transform: translateX(-40px);
+      transition: opacity 0.75s ease, transform 0.75s ease;
+    }
+    .reveal-left.visible { opacity: 1; transform: translateX(0); }
+    .reveal-right {
+      opacity: 0;
+      transform: translateX(40px);
+      transition: opacity 0.75s ease, transform 0.75s ease;
+    }
+    .reveal-right.visible { opacity: 1; transform: translateX(0); }
+
+    /* ============================================================
+       NAVBAR
+    ============================================================ */
+    #navbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      padding: 0 5%;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background 0.4s, backdrop-filter 0.4s, border-bottom 0.4s;
+    }
+    #navbar.scrolled {
+      background: rgba(5, 5, 8, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-family: var(--font-mono);
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--white);
+    }
+    .nav-logo span { color: var(--cyan); }
+
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      align-items: center;
+    }
+    .nav-links a {
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      position: relative;
+      transition: color 0.3s;
+    }
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px; left: 0;
+      width: 0; height: 1px;
+      background: var(--cyan);
+      transition: width 0.3s;
+    }
+    .nav-links a:hover { color: var(--white); }
+    .nav-links a:hover::after { width: 100%; }
+
+    /* Hamburger */
+    .nav-toggle {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: 5px;
+      background: none;
+      border: none;
+    }
+    .nav-toggle span {
+      display: block;
+      width: 26px; height: 2px;
+      background: var(--white);
+      border-radius: 2px;
+      transition: all 0.35s;
+    }
+    .nav-toggle.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .nav-toggle.open span:nth-child(2) { opacity: 0; }
+    .nav-toggle.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* Mobile menu */
+    .nav-mobile {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 5, 8, 0.97);
+      backdrop-filter: blur(30px);
+      z-index: 999;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2.5rem;
+    }
+    .nav-mobile.open { display: flex; }
+    .nav-mobile a {
+      font-family: var(--font-display);
+      font-size: 2.4rem;
+      font-weight: 300;
+      letter-spacing: 0.06em;
+      color: var(--white);
+      transition: color 0.3s;
+    }
+    .nav-mobile a:hover { color: var(--cyan); }
+
+    /* ============================================================
+       HERO SECTION
+    ============================================================ */
+    #hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: var(--black);
+    }
+
+    /* Animated light beams */
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+    .beam {
+      position: absolute;
+      width: 2px;
+      background: linear-gradient(to bottom, transparent, var(--cyan), transparent);
+      opacity: 0;
+      animation: beamFall 8s infinite ease-in-out;
+    }
+    .beam:nth-child(1)  { left: 18%; height: 45%; top: -10%; animation-delay: 0s;   animation-duration: 7s; }
+    .beam:nth-child(2)  { left: 34%; height: 60%; top: -20%; animation-delay: 1.5s; animation-duration: 9s; opacity-end: 0.3; }
+    .beam:nth-child(3)  { left: 52%; height: 35%; top:  -5%; animation-delay: 3s;   animation-duration: 6s; }
+    .beam:nth-child(4)  { left: 70%; height: 55%; top: -15%; animation-delay: 0.8s; animation-duration: 8s; }
+    .beam:nth-child(5)  { left: 85%; height: 40%; top: -10%; animation-delay: 2.2s; animation-duration: 7.5s; }
+    .beam.gold {
+      background: linear-gradient(to bottom, transparent, var(--gold), transparent);
+    }
+    .beam:nth-child(2), .beam:nth-child(5) { width: 1.5px; }
+    .beam:nth-child(4) { /* gold accent */ background: linear-gradient(to bottom, transparent, var(--gold), transparent); }
+
+    @keyframes beamFall {
+      0%   { opacity: 0; transform: translateY(-60px) scaleY(0.7); }
+      30%  { opacity: 0.25; }
+      60%  { opacity: 0.12; }
+      100% { opacity: 0; transform: translateY(60vh) scaleY(1.2); }
+    }
+
+    /* Radial glow center */
+    .hero-glow {
+      position: absolute;
+      width: 700px; height: 700px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,229,255,0.07) 0%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      animation: pulsate 6s ease-in-out infinite;
+    }
+    @keyframes pulsate {
+      0%, 100% { transform: translate(-50%,-50%) scale(1);   opacity: 1; }
+      50%       { transform: translate(-50%,-50%) scale(1.12); opacity: 0.7; }
+    }
+
+    /* Hero grid lines */
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,229,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,0.04) 1px, transparent 1px);
+      background-size: 80px 80px;
+      mask-image: radial-gradient(ellipse at center, black 20%, transparent 80%);
+    }
+
+    /* Hero image backdrop */
+    .hero-img-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(to bottom, rgba(5,5,8,0.6) 0%, rgba(5,5,8,0.3) 50%, rgba(5,5,8,0.9) 100%),
+        url('https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=1600&auto=format&fit=crop&q=80')
+        center/cover no-repeat;
+      opacity: 0.45;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      padding: 2rem;
+      max-width: 900px;
+    }
+
+    .hero-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.3em;
+      color: var(--cyan);
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.3s forwards ease;
+    }
+
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(3.5rem, 10vw, 8.5rem);
+      font-weight: 300;
+      line-height: 0.95;
+      letter-spacing: -0.01em;
+      color: var(--white);
+      margin-bottom: 0.4rem;
+      opacity: 0;
+      animation: fadeUp 0.9s 0.55s forwards ease;
+    }
+    .hero-title em {
+      font-style: italic;
+      color: var(--cyan);
+      text-shadow: 0 0 60px rgba(0,229,255,0.5);
+    }
+    .hero-title .gold-word { color: var(--gold); }
+
+    .hero-sub {
+      font-family: var(--font-display);
+      font-size: clamp(1.1rem, 3vw, 1.9rem);
+      font-weight: 300;
+      font-style: italic;
+      color: var(--muted);
+      margin: 1.5rem 0 2.5rem;
+      opacity: 0;
+      animation: fadeUp 0.9s 0.8s forwards ease;
+    }
+
+    .hero-cta-group {
+      display: flex;
+      gap: 1.2rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: fadeUp 0.9s 1s forwards ease;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.85rem 2.2rem;
+      font-family: var(--font-body);
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      border-radius: 2px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--white);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .btn:hover::before { opacity: 0.06; }
+
+    .btn-primary {
+      background: var(--cyan);
+      color: var(--black);
+    }
+    .btn-primary:hover {
+      box-shadow: 0 0 28px rgba(0,229,255,0.5);
+      transform: translateY(-2px);
+    }
+    .btn-outline {
+      background: transparent;
+      color: var(--white);
+      border: 1px solid var(--border);
+    }
+    .btn-outline:hover {
+      border-color: var(--cyan);
+      color: var(--cyan);
+      transform: translateY(-2px);
+    }
+
+    .hero-scroll-hint {
+      position: absolute;
+      bottom: 2.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      opacity: 0;
+      animation: fadeIn 1s 1.8s forwards;
+    }
+    .hero-scroll-hint span {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.25em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .scroll-line {
+      width: 1px;
+      height: 50px;
+      background: linear-gradient(to bottom, var(--cyan), transparent);
+      animation: scrollLine 2s infinite ease;
+    }
+    @keyframes scrollLine {
+      0%   { transform: scaleY(0); transform-origin: top; opacity: 1; }
+      50%  { transform: scaleY(1); transform-origin: top; }
+      51%  { transform: scaleY(1); transform-origin: bottom; }
+      100% { transform: scaleY(0); transform-origin: bottom; opacity: 0; }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+
+    /* ============================================================
+       SECTION SHARED
+    ============================================================ */
+    section {
+      position: relative;
+      z-index: 2;
+      padding: 7rem 5%;
+    }
+
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      max-width: 60px;
+      height: 1px;
+      background: var(--cyan-dim);
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(2.4rem, 5vw, 4rem);
+      font-weight: 300;
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+      margin-bottom: 1.2rem;
+    }
+    .section-title em { color: var(--cyan); font-style: italic; }
+    .section-title .gold { color: var(--gold); }
+
+    .section-desc {
+      color: var(--muted);
+      font-size: 1rem;
+      max-width: 520px;
+      line-height: 1.8;
+    }
+
+    /* ============================================================
+       SERVICIOS
+    ============================================================ */
+    #servicios { background: var(--deep); }
+
+    .services-header {
+      max-width: 560px;
+      margin-bottom: 4rem;
+    }
+
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5px;
+      background: var(--border);
+    }
+
+    .service-card {
+      background: var(--card);
+      padding: 2.8rem 2.4rem;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.35s;
+      cursor: default;
+    }
+    .service-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--cyan-dim) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+    .service-card:hover { background: #161622; }
+    .service-card:hover::before { opacity: 1; }
+
+    .service-card .number {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.3em;
+      color: var(--muted);
+      margin-bottom: 2rem;
+    }
+
+    .service-icon {
+      font-size: 2.6rem;
+      color: var(--cyan);
+      margin-bottom: 1.4rem;
+      display: block;
+      transition: transform 0.35s, color 0.35s;
+      line-height: 1;
+    }
+    .service-card:hover .service-icon {
+      transform: scale(1.1) rotate(-5deg);
+      color: var(--gold);
+    }
+
+    .service-card h3 {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      font-weight: 400;
+      margin-bottom: 0.8rem;
+      line-height: 1.2;
+    }
+
+    .service-card p {
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.75;
+    }
+
+    .service-card .card-arrow {
+      margin-top: 1.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      transition: color 0.3s, gap 0.3s;
+    }
+    .service-card:hover .card-arrow {
+      color: var(--cyan);
+      gap: 0.8rem;
+    }
+
+    /* ============================================================
+       GALERÍA
+    ============================================================ */
+    #galeria { background: var(--black); }
+
+    .gallery-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 3rem;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-template-rows: repeat(3, 220px);
+      gap: 6px;
+    }
+
+    .gallery-item {
+      overflow: hidden;
+      position: relative;
+      background: var(--surface);
+    }
+    .gallery-item::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%);
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+    .gallery-item:hover::after { opacity: 1; }
+
+    .gallery-item img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: transform 0.65s ease;
+    }
+    .gallery-item:hover img { transform: scale(1.07); }
+
+    .gallery-item .overlay-label {
+      position: absolute;
+      bottom: 1.2rem;
+      left: 1.5rem;
+      z-index: 2;
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 300;
+      color: var(--white);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.4s, transform 0.4s;
+    }
+    .gallery-item:hover .overlay-label {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Gallery layout */
+    .gi-1 { grid-column: span 4; grid-row: span 2; }
+    .gi-2 { grid-column: span 4; grid-row: span 1; }
+    .gi-3 { grid-column: span 4; grid-row: span 1; }
+    .gi-4 { grid-column: span 3; grid-row: span 1; }
+    .gi-5 { grid-column: span 5; grid-row: span 1; }
+    .gi-6 { grid-column: span 5; grid-row: span 2; }
+    .gi-7 { grid-column: span 4; grid-row: span 1; }
+    .gi-8 { grid-column: span 3; grid-row: span 1; }
+
+    /* ============================================================
+       SOBRE NOSOTROS
+    ============================================================ */
+    #sobre { background: var(--deep); }
+
+    .about-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6rem;
+      align-items: center;
+    }
+
+    .about-image-wrap {
+      position: relative;
+    }
+    .about-image-wrap img {
+      border-radius: 1px;
+      filter: grayscale(20%) contrast(1.05);
+      transition: filter 0.5s;
+    }
+    .about-image-wrap:hover img { filter: grayscale(0%) contrast(1.05); }
+
+    /* Decorative frame */
+    .about-image-wrap::before {
+      content: '';
+      position: absolute;
+      top: -18px; right: -18px;
+      width: 55%; height: 55%;
+      border: 1px solid var(--cyan-dim);
+      z-index: 0;
+    }
+    .about-image-wrap::after {
+      content: '';
+      position: absolute;
+      bottom: -18px; left: -18px;
+      width: 40%; height: 40%;
+      border: 1px solid var(--gold-dim);
+    }
+    .about-image-wrap img { position: relative; z-index: 1; }
+
+    .about-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+    .stat-item {
+      padding: 1.4rem;
+      border: 1px solid var(--border);
+      background: var(--card);
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-item::before {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0;
+      width: 100%; height: 2px;
+      background: linear-gradient(to right, var(--cyan), transparent);
+    }
+    .stat-num {
+      font-family: var(--font-display);
+      font-size: 2.6rem;
+      font-weight: 300;
+      color: var(--white);
+      line-height: 1;
+      margin-bottom: 0.3rem;
+    }
+    .stat-num span { color: var(--cyan); }
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .about-values {
+      margin-top: 2.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+    .value-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+    .value-item::before {
+      content: '';
+      width: 5px; height: 5px;
+      background: var(--cyan);
+      border-radius: 50%;
+      flex-shrink: 0;
+      box-shadow: 0 0 8px var(--cyan);
+    }
+    .value-item strong { color: var(--white); }
+
+    /* ============================================================
+       CONTACTO
+    ============================================================ */
+    #contacto { background: var(--black); }
+
+    .contact-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: start;
+    }
+
+    .contact-info {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+    .contact-row {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      padding: 1.3rem 1.5rem;
+      border: 1px solid var(--border);
+      background: var(--card);
+      transition: border-color 0.3s, background 0.3s;
+      text-decoration: none;
+      color: var(--white);
+    }
+    .contact-row:hover {
+      border-color: var(--cyan-dim);
+      background: #161622;
+    }
+    .contact-icon {
+      font-size: 1.5rem;
+      color: var(--cyan);
+      flex-shrink: 0;
+    }
+    .contact-row-body small {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 0.2rem;
+    }
+    .contact-row-body strong { font-size: 1rem; font-weight: 500; }
+
+    .social-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .social-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 1.4rem 1rem;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--muted);
+      font-size: 0.72rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      transition: all 0.3s;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .social-btn i { font-size: 1.8rem; transition: color 0.3s, transform 0.35s; }
+    .social-btn:hover { background: #161622; color: var(--white); }
+    .social-btn:hover i { transform: scale(1.15); }
+    .social-btn.fb:hover i   { color: #1877f2; }
+    .social-btn.ig:hover i   { color: #e1306c; }
+    .social-btn.tt:hover i   { color: #69c9d0; }
+
+    /* Contact form */
+    .contact-form-wrap {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 2.5rem;
+    }
+    .contact-form-wrap h3 {
+      font-family: var(--font-display);
+      font-size: 1.8rem;
+      font-weight: 300;
+      margin-bottom: 1.8rem;
+    }
+    .form-group {
+      margin-bottom: 1.3rem;
+    }
+    .form-group label {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--white);
+      padding: 0.85rem 1.1rem;
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      border-radius: 0;
+      outline: none;
+      transition: border-color 0.3s;
+      appearance: none;
+    }
+    .form-group select option { background: var(--surface); }
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      border-color: var(--cyan-dim);
+    }
+    .form-group textarea { resize: vertical; min-height: 110px; }
+
+    .form-submit {
+      width: 100%;
+      margin-top: 0.5rem;
+    }
+    .form-success {
+      display: none;
+      text-align: center;
+      padding: 1.5rem;
+      color: var(--cyan);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      letter-spacing: 0.15em;
+    }
+
+    /* ============================================================
+       FOOTER
+    ============================================================ */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 5%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      position: relative;
+      z-index: 2;
+    }
+    .footer-logo {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+    .footer-logo span { color: var(--cyan); }
+    footer p {
+      font-size: 0.78rem;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+
+    /* ============================================================
+       FLOATING WHATSAPP BUTTON
+    ============================================================ */
+    #wa-float {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      z-index: 900;
+      width: 58px; height: 58px;
+      background: #25d366;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 24px rgba(37,211,102,0.4);
+      transition: transform 0.3s, box-shadow 0.3s;
+      text-decoration: none;
+    }
+    #wa-float:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 32px rgba(37,211,102,0.6);
+    }
+    #wa-float i { font-size: 1.8rem; color: #fff; }
+
+    #wa-float .wa-tooltip {
+      position: absolute;
+      right: 70px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--white);
+      font-size: 0.8rem;
+      padding: 0.5rem 0.9rem;
+      white-space: nowrap;
+      border-radius: 2px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    #wa-float:hover .wa-tooltip { opacity: 1; }
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+    @media (max-width: 900px) {
+      .nav-links { display: none; }
+      .nav-toggle { display: flex; }
+
+      .about-inner  { grid-template-columns: 1fr; gap: 3rem; }
+      .contact-inner { grid-template-columns: 1fr; gap: 3rem; }
+
+      .gallery-grid {
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: auto;
+      }
+      .gi-1, .gi-2, .gi-3, .gi-4,
+      .gi-5, .gi-6, .gi-7, .gi-8 {
+        grid-column: span 1;
+        grid-row: span 1;
+        height: 230px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      section { padding: 5rem 6%; }
+      .hero-title { font-size: clamp(3rem, 14vw, 5rem); }
+      .gallery-grid { grid-template-columns: 1fr; }
+      .gi-1, .gi-2, .gi-3, .gi-4,
+      .gi-5, .gi-6, .gi-7, .gi-8 { height: 210px; }
+      .about-stats { grid-template-columns: 1fr 1fr; }
+      .social-grid  { grid-template-columns: repeat(3,1fr); }
+    }
+
+    /* Disable custom cursor on touch */
+    @media (hover: none) {
+      body { cursor: auto; }
+      #cursor-dot, #cursor-ring { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================
+       CUSTOM CURSOR
+  ============================================================ -->
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+
+  <!-- ============================================================
+       NAVBAR
+  ============================================================ -->
+  <nav id="navbar">
+    <a href="#hero" class="nav-logo"><span>_</span>EVERLIGHT<span>_</span>STUDIO</a>
+    <ul class="nav-links">
+      <li><a href="#servicios">Servicios</a></li>
+      <li><a href="#galeria">Galería</a></li>
+      <li><a href="#sobre">Nosotros</a></li>
+      <li><a href="#contacto">Contacto</a></li>
+      <li>
+        <a href="https://wa.me/522221234567" target="_blank" rel="noopener" class="btn btn-primary" style="padding:0.55rem 1.4rem;font-size:0.75rem;">
+          <i class="ph-bold ph-whatsapp-logo"></i> WhatsApp
+        </a>
+      </li>
+    </ul>
+    <button class="nav-toggle" id="navToggle" aria-label="Menú">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- Mobile nav overlay -->
+  <div class="nav-mobile" id="navMobile">
+    <a href="#servicios" class="mobile-link">Servicios</a>
+    <a href="#galeria"   class="mobile-link">Galería</a>
+    <a href="#sobre"     class="mobile-link">Nosotros</a>
+    <a href="#contacto"  class="mobile-link">Contacto</a>
+  </div>
+
+  <!-- ============================================================
+       HERO
+  ============================================================ -->
+  <section id="hero">
+    <div class="hero-bg">
+      <div class="hero-img-bg"></div>
+      <div class="hero-grid"></div>
+      <div class="hero-glow"></div>
+      <!-- Beams -->
+      <div class="beam"></div>
+      <div class="beam"></div>
+      <div class="beam gold"></div>
+      <div class="beam"></div>
+      <div class="beam gold"></div>
+    </div>
+
+    <div class="hero-content">
+      <p class="hero-eyebrow">Fotografía · Arte · Luz</p>
+      <h1 class="hero-title">
+        Cada <em>luz</em><br>
+        cuenta una<br>
+        <span class="gold-word">historia</span>
+      </h1>
+      <p class="hero-sub">
+        Capturamos instantes eternos con una sola cámara.<br>
+        Parejas, cosplay, retratos y eventos.
+      </p>
+      <div class="hero-cta-group">
+        <a href="#galeria" class="btn btn-primary">
+          <i class="ph-bold ph-images"></i> Ver Galería
+        </a>
+        <a href="#contacto" class="btn btn-outline">
+          Reservar Sesión
+        </a>
+      </div>
+    </div>
+
+    <div class="hero-scroll-hint">
+      <span>Scroll</span>
+      <div class="scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SERVICIOS
+  ============================================================ -->
+  <section id="servicios">
+    <div class="services-header reveal">
+      <p class="section-label">Lo que hacemos</p>
+      <h2 class="section-title">Nuestros <em>servicios</em></h2>
+      <p class="section-desc">Cada sesión es diseñada para ti. Desde el concepto hasta la edición final, cuidamos cada detalle.</p>
+    </div>
+
+    <div class="services-grid">
+
+      <!-- Parejas -->
+      <div class="service-card reveal" style="transition-delay:0.1s">
+        <p class="number">01 — Servicio</p>
+        <i class="ph-bold ph-heart service-icon"></i>
+        <h3>Fotografía de Parejas</h3>
+        <p>Sesiones íntimas y llenas de emoción. Capturamos la conexión real entre dos personas en ambientes únicos: interior, exterior, urbano o natural.</p>
+        <div class="card-arrow">
+          <span>Reservar</span>
+          <i class="ph-bold ph-arrow-right"></i>
+        </div>
+      </div>
+
+      <!-- Cosplay -->
+      <div class="service-card reveal" style="transition-delay:0.2s">
+        <p class="number">02 — Servicio</p>
+        <i class="ph-bold ph-shield-star service-icon"></i>
+        <h3>Fotografía de Cosplay</h3>
+        <p>Tu personaje merece una producción a su altura. Iluminación dramática, ángulos creativos y edición temática para dar vida a tu disfraz.</p>
+        <div class="card-arrow">
+          <span>Reservar</span>
+          <i class="ph-bold ph-arrow-right"></i>
+        </div>
+      </div>
+
+      <!-- Individual -->
+      <div class="service-card reveal" style="transition-delay:0.3s">
+        <p class="number">03 — Servicio</p>
+        <i class="ph-bold ph-user-circle service-icon"></i>
+        <h3>Sesiones Individuales</h3>
+        <p>Retratos para redes sociales, book personal, uso profesional o simplemente para ti. Te guiamos en cada pose para resultados naturales.</p>
+        <div class="card-arrow">
+          <span>Reservar</span>
+          <i class="ph-bold ph-arrow-right"></i>
+        </div>
+      </div>
+
+      <!-- Eventos -->
+      <div class="service-card reveal" style="transition-delay:0.4s">
+        <p class="number">04 — Servicio</p>
+        <i class="ph-bold ph-confetti service-icon"></i>
+        <h3>Cobertura de Eventos</h3>
+        <p>Cobertura básica de eventos sociales, convenciones, fiestas o reuniones. Momentos espontáneos y retratos grupales que quedan para siempre.</p>
+        <div class="card-arrow">
+          <span>Reservar</span>
+          <i class="ph-bold ph-arrow-right"></i>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================
+       GALERÍA
+  ============================================================ -->
+  <section id="galeria">
+    <div class="gallery-header">
+      <div class="reveal">
+        <p class="section-label">Portafolio</p>
+        <h2 class="section-title">Nuestra <em>galería</em></h2>
+      </div>
+      <a href="#contacto" class="btn btn-outline reveal" style="transition-delay:0.2s">Ver Completo</a>
+    </div>
+
+    <div class="gallery-grid">
+      <div class="gallery-item gi-1 reveal" style="transition-delay:0.05s">
+        <img src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&auto=format&fit=crop&q=80" alt="Pareja" loading="lazy" />
+        <span class="overlay-label">Parejas · Urbano</span>
+      </div>
+      <div class="gallery-item gi-2 reveal" style="transition-delay:0.1s">
+        <img src="https://images.unsplash.com/photo-1542103749-8ef59b94f47e?w=800&auto=format&fit=crop&q=80" alt="Retrato" loading="lazy" />
+        <span class="overlay-label">Retrato · Estudio</span>
+      </div>
+      <div class="gallery-item gi-3 reveal" style="transition-delay:0.15s">
+        <img src="https://images.unsplash.com/photo-1509631179647-0177331693ae?w=800&auto=format&fit=crop&q=80" alt="Cosplay" loading="lazy" />
+        <span class="overlay-label">Cosplay · Dramático</span>
+      </div>
+      <div class="gallery-item gi-4 reveal" style="transition-delay:0.2s">
+        <img src="https://images.unsplash.com/photo-1537944434965-cf4679d1a598?w=800&auto=format&fit=crop&q=80" alt="Evento" loading="lazy" />
+        <span class="overlay-label">Evento · Social</span>
+      </div>
+      <div class="gallery-item gi-5 reveal" style="transition-delay:0.25s">
+        <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&auto=format&fit=crop&q=80" alt="Individual" loading="lazy" />
+        <span class="overlay-label">Individual · Moda</span>
+      </div>
+      <div class="gallery-item gi-6 reveal" style="transition-delay:0.3s">
+        <img src="https://images.unsplash.com/photo-1591035897819-f4bdf739f446?w=800&auto=format&fit=crop&q=80" alt="Cosplay 2" loading="lazy" />
+        <span class="overlay-label">Cosplay · Fantasia</span>
+      </div>
+      <div class="gallery-item gi-7 reveal" style="transition-delay:0.35s">
+        <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=800&auto=format&fit=crop&q=80" alt="Retrato 2" loading="lazy" />
+        <span class="overlay-label">Retrato · Natural</span>
+      </div>
+      <div class="gallery-item gi-8 reveal" style="transition-delay:0.4s">
+        <img src="https://images.unsplash.com/photo-1460723237483-7a6dc9d0b212?w=800&auto=format&fit=crop&q=80" alt="Pareja 2" loading="lazy" />
+        <span class="overlay-label">Parejas · Natural</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SOBRE NOSOTROS
+  ============================================================ -->
+  <section id="sobre">
+    <div class="about-inner">
+      <div class="about-image-wrap reveal-left">
+        <img src="https://images.unsplash.com/photo-1493863641943-9b68992a8d07?w=900&auto=format&fit=crop&q=80" alt="Fotógrafo en acción" loading="lazy" />
+      </div>
+
+      <div class="reveal-right">
+        <p class="section-label">Nuestra historia</p>
+        <h2 class="section-title">El arte de<br>capturar la <span class="gold">luz</span></h2>
+        <p class="section-desc" style="margin-bottom:1.5rem;">
+          <em>_EVERLIGHT_STUDIO</em> nació de la pasión por la fotografía artística y auténtica. Creemos que cada persona tiene una historia única que merece ser contada con belleza, luz y emoción.
+        </p>
+        <p class="section-desc">
+          Trabajamos con una sola cámara y una visión clara: que cada imagen sea una obra de arte, no solo un recuerdo. Nos especializamos en conectar con nuestros clientes para obtener resultados naturales, expresivos y memorables.
+        </p>
+
+        <div class="about-stats">
+          <div class="stat-item">
+            <div class="stat-num">200<span>+</span></div>
+            <div class="stat-label">Sesiones realizadas</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-num">4</div>
+            <div class="stat-label">Servicios especializados</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-num">100<span>%</span></div>
+            <div class="stat-label">Dedicación en cada toma</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-num">1</div>
+            <div class="stat-label">Cámara. Infinitas historias.</div>
+          </div>
+        </div>
+
+        <div class="about-values">
+          <div class="value-item"><strong>Autenticidad</strong> — Sin poses forzadas, solo momentos reales</div>
+          <div class="value-item"><strong>Calidad</strong> — Edición cuidadosa en cada fotografía entregada</div>
+          <div class="value-item"><strong>Confianza</strong> — Un ambiente cómodo para que brilles naturalmente</div>
+          <div class="value-item"><strong>Creatividad</strong> — Cada sesión es única, diseñada para ti</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       CONTACTO
+  ============================================================ -->
+  <section id="contacto">
+    <div class="contact-inner">
+      <!-- Info column -->
+      <div>
+        <div class="reveal">
+          <p class="section-label">Hablemos</p>
+          <h2 class="section-title">Reserva tu <em>sesión</em></h2>
+          <p class="section-desc">¿Tienes una idea en mente? Cuéntanosla. Respondemos rápido y con gusto.</p>
+        </div>
+
+        <div class="contact-info reveal" style="transition-delay:0.15s">
+          <!-- WhatsApp -->
+          <a href="https://wa.me/522221234567" target="_blank" rel="noopener" class="contact-row">
+            <i class="ph-bold ph-whatsapp-logo contact-icon" style="color:#25d366"></i>
+            <div class="contact-row-body">
+              <small>WhatsApp directo</small>
+              <strong>+52 222 123 4567</strong>
+            </div>
+          </a>
+          <!-- Email -->
+          <a href="mailto:contacto@everlightstudio.mx" class="contact-row">
+            <i class="ph-bold ph-envelope contact-icon"></i>
+            <div class="contact-row-body">
+              <small>Correo electrónico</small>
+              <strong>contacto@everlightstudio.mx</strong>
+            </div>
+          </a>
+          <!-- Teléfono -->
+          <a href="tel:+522221234567" class="contact-row">
+            <i class="ph-bold ph-phone contact-icon"></i>
+            <div class="contact-row-body">
+              <small>Teléfono</small>
+              <strong>+52 222 123 4567</strong>
+            </div>
+          </a>
+        </div>
+
+        <!-- Redes sociales -->
+        <p class="section-label reveal" style="margin-top:2.5rem;transition-delay:0.25s">Síguenos en redes</p>
+        <div class="social-grid reveal" style="transition-delay:0.3s">
+          <a href="https://facebook.com/everlightstudio" target="_blank" rel="noopener" class="social-btn fb">
+            <i class="ph-bold ph-facebook-logo"></i>
+            <span>Facebook</span>
+          </a>
+          <a href="https://instagram.com/everlightstudio" target="_blank" rel="noopener" class="social-btn ig">
+            <i class="ph-bold ph-instagram-logo"></i>
+            <span>Instagram</span>
+          </a>
+          <a href="https://tiktok.com/@everlightstudio" target="_blank" rel="noopener" class="social-btn tt">
+            <i class="ph-bold ph-tiktok-logo"></i>
+            <span>TikTok</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Form column -->
+      <div class="contact-form-wrap reveal" style="transition-delay:0.2s">
+        <h3>Cuéntanos tu idea</h3>
+        <form id="contactForm">
+          <div class="form-group">
+            <label>Tu nombre</label>
+            <input type="text" placeholder="Ej: Andrea García" required />
+          </div>
+          <div class="form-group">
+            <label>Correo electrónico</label>
+            <input type="email" placeholder="andrea@correo.com" required />
+          </div>
+          <div class="form-group">
+            <label>Servicio de interés</label>
+            <select required>
+              <option value="">Selecciona un servicio...</option>
+              <option>Fotografía de Parejas</option>
+              <option>Fotografía de Cosplay</option>
+              <option>Sesión Individual</option>
+              <option>Cobertura de Evento</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Tu mensaje</label>
+            <textarea placeholder="Cuéntanos sobre tu idea, fecha estimada, lugar..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary form-submit">
+            <i class="ph-bold ph-paper-plane-tilt"></i>
+            Enviar mensaje
+          </button>
+        </form>
+        <div class="form-success" id="formSuccess">
+          <i class="ph-bold ph-check-circle" style="font-size:2rem;display:block;margin-bottom:0.5rem;"></i>
+          ¡Mensaje enviado! Nos pondremos en contacto pronto.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       FOOTER
+  ============================================================ -->
+  <footer>
+    <div class="footer-logo"><span>_</span>EVERLIGHT<span>_</span>STUDIO</div>
+    <p>© 2025 Everlight Studio. Todos los derechos reservados.</p>
+    <p style="font-size:0.72rem;color:var(--muted)">Hecho con luz y pasión 📷</p>
+  </footer>
+
+  <!-- ============================================================
+       FLOATING WHATSAPP
+  ============================================================ -->
+  <a id="wa-float" href="https://wa.me/522221234567" target="_blank" rel="noopener" aria-label="WhatsApp">
+    <i class="ph-bold ph-whatsapp-logo"></i>
+    <div class="wa-tooltip">¡Chateemos ahora!</div>
+  </a>
+
+  <!-- ============================================================
+       JAVASCRIPT
+  ============================================================ -->
+  <script>
+    /* ---------- Custom Cursor ---------- */
+    const dot  = document.getElementById('cursor-dot');
+    const ring = document.getElementById('cursor-ring');
+
+    let mouseX = 0, mouseY = 0;
+    let ringX  = 0, ringY  = 0;
+    let raf;
+
+    document.addEventListener('mousemove', e => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      dot.style.left = mouseX + 'px';
+      dot.style.top  = mouseY + 'px';
+    });
+
+    function animateRing() {
+      ringX += (mouseX - ringX) * 0.12;
+      ringY += (mouseY - ringY) * 0.12;
+      ring.style.left = ringX + 'px';
+      ring.style.top  = ringY + 'px';
+      raf = requestAnimationFrame(animateRing);
+    }
+    animateRing();
+
+    document.querySelectorAll('a, button, .service-card, .gallery-item').forEach(el => {
+      el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
+      el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+    });
+
+    /* ---------- Navbar scroll ---------- */
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('scrolled', window.scrollY > 60);
+    }, { passive: true });
+
+    /* ---------- Mobile nav ---------- */
+    const navToggle = document.getElementById('navToggle');
+    const navMobile = document.getElementById('navMobile');
+
+    navToggle.addEventListener('click', () => {
+      navToggle.classList.toggle('open');
+      navMobile.classList.toggle('open');
+      document.body.style.overflow = navMobile.classList.contains('open') ? 'hidden' : '';
+    });
+
+    document.querySelectorAll('.mobile-link').forEach(link => {
+      link.addEventListener('click', () => {
+        navToggle.classList.remove('open');
+        navMobile.classList.remove('open');
+        document.body.style.overflow = '';
+      });
+    });
+
+    /* ---------- Scroll reveal ---------- */
+    const revealEls = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+
+    revealEls.forEach(el => observer.observe(el));
+
+    /* ---------- Contact form ---------- */
+    const form    = document.getElementById('contactForm');
+    const success = document.getElementById('formSuccess');
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      form.style.display = 'none';
+      success.style.display = 'block';
+    });
+
+    /* ---------- Parallax hero beams ---------- */
+    document.addEventListener('mousemove', e => {
+      const beams = document.querySelectorAll('.beam');
+      const xRatio = (e.clientX / window.innerWidth - 0.5) * 20;
+      beams.forEach((b, i) => {
+        const dir = i % 2 === 0 ? 1 : -1;
+        b.style.transform = `translateX(${xRatio * dir * 0.4}px)`;
+      });
+    });
+
+    /* ---------- Stats counter animation ---------- */
+    function animateCounter(el, target, suffix = '') {
+      let current = 0;
+      const step = Math.max(1, Math.floor(target / 40));
+      const timer = setInterval(() => {
+        current = Math.min(current + step, target);
+        el.innerHTML = current + '<span>' + suffix + '</span>';
+        if (current >= target) clearInterval(timer);
+      }, 40);
+    }
+
+    const statsObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const el  = entry.target;
+        const txt = el.textContent.trim();
+        const val = parseInt(txt);
+        const suf = txt.includes('+') ? '+' : txt.includes('%') ? '%' : '';
+        animateCounter(el, val, suf);
+        statsObserver.unobserve(el);
+      });
+    }, { threshold: 0.6 });
+
+    document.querySelectorAll('.stat-num').forEach(el => statsObserver.observe(el));
+  </script>
+</body>
+</html>
